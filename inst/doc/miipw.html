@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Introduction to MIIPW</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to MIIPW</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This is a vignette for our package ‘MIIPW’. It contains function for
+fitting GEE model for repeated measurement data. We have included mainly
+five function</p>
+<ul>
+<li>meanscore</li>
+<li>sipw</li>
+<li>aipw</li>
+<li>misipw</li>
+<li>miaipw</li>
+<li>QICmiipw</li>
+</ul>
+<p>We have included a repeated measured gene expression data in our
+package. Models are fitted to the dataset available in our package as
+below.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MIIPW)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;srdata1&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(srdata1)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    ID Visit   C6kine ActivinRIB ActivinRIIA ActivinRIIAB Adiponectin     AgRP</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5   2     1 1543.212   589.8966    277.3228     20377.32   10834.171 389.7555</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6   2     2 2130.282   820.4673    390.4100     38432.00   18354.472 560.1543</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7   2     4 1444.763   833.0092    459.7626     16478.16    8141.389 373.6979</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8   2     5 2661.616   860.1184    355.3753     26138.09   21286.228 506.2943</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9   3     1 2064.330   532.0388    435.7554     25176.20    7440.891 605.6970</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10  3     2 2341.346   579.0088    375.4292     24950.24   10418.850 608.5809</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       ALCAM</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  77.70429</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6  63.06272</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7        NA</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8  54.20246</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9  66.67085</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 71.75843</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">apply</span>(srdata1,<span class="dv">2</span>,anyNA)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           ID        Visit       C6kine   ActivinRIB  ActivinRIIA ActivinRIIAB </span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        FALSE        FALSE         TRUE         TRUE         TRUE        FALSE </span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Adiponectin         AgRP        ALCAM </span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         TRUE         TRUE         TRUE</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>mice<span class="sc">::</span><span class="fu">md.pattern</span>(srdata1[,<span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)],<span class="at">plot =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<pre><code>#&gt;     ActivinRIIAB ActivinRIB ActivinRIIA Adiponectin AgRP C6kine ALCAM   
+#&gt; 124            1          1           1           1    1      1     1  0
+#&gt; 8              1          1           1           1    1      1     0  1
+#&gt; 9              1          1           1           1    1      0     1  1
+#&gt; 1              1          1           1           1    1      0     0  2
+#&gt; 5              1          1           1           1    0      1     1  1
+#&gt; 6              1          1           1           0    1      1     1  1
+#&gt; 1              1          1           1           0    1      1     0  2
+#&gt; 1              1          1           1           0    0      1     1  2
+#&gt; 4              1          1           0           1    1      1     1  1
+#&gt; 1              1          1           0           1    0      1     1  2
+#&gt; 1              1          1           0           0    0      1     1  3
+#&gt; 2              1          0           1           1    1      1     1  1
+#&gt; 1              1          0           0           1    0      1     1  3
+#&gt;                0          3           7           9    9     10    10 48</code></pre>
+</div>
+<div id="meanscore-method" class="section level1">
+<h1>Meanscore method</h1>
+<p>Here we have considered the response model for
+<strong>C6kine</strong>, depending on the other covariates in dataset
+srdata1. Formula object below defines the model struture. Imputation
+model for the methods described in can be specified through the
+predictor matrix function available in mice package.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>formula<span class="ot">&lt;-</span>C6kine<span class="sc">~</span>ActivinRIB<span class="sc">+</span>ActivinRIIA<span class="sc">+</span>ActivinRIIAB<span class="sc">+</span>Adiponectin<span class="sc">+</span>AgRP<span class="sc">+</span>ALCAM</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>pMat<span class="ot">&lt;-</span>mice<span class="sc">::</span><span class="fu">make.predictorMatrix</span>(srdata1[<span class="fu">names</span>(srdata1)<span class="sc">%in%</span><span class="fu">all.vars</span>(formula)])</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>m1<span class="ot">&lt;-</span><span class="fu">MeanScore</span>(<span class="at">data=</span>srdata1,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>formula<span class="ot">&lt;-</span>formula,<span class="at">id=</span><span class="st">&#39;ID&#39;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">visit=</span><span class="st">&#39;Visit&#39;</span>,<span class="at">family=</span><span class="st">&#39;gaussian&#39;</span>,<span class="at">init.beta =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">init.alpha=</span><span class="cn">NULL</span>,<span class="at">init.phi=</span><span class="dv">1</span>,<span class="at">tol=</span>.<span class="dv">00001</span>,<span class="at">weights =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">corstr =</span> <span class="st">&#39;exchangeable&#39;</span>,<span class="at">maxit=</span><span class="dv">50</span>,<span class="at">m=</span><span class="dv">2</span>,<span class="at">pMat=</span>pMat)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary_meanscore</span>(m1)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $call</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; MeanScore(data = srdata1, formula = formula &lt;- formula, id = &quot;ID&quot;, </span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     visit = &quot;Visit&quot;, family = &quot;gaussian&quot;, init.beta = NULL, init.alpha = NULL, </span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     init.phi = 1, tol = 1e-05, weights = NULL, corstr = &quot;exchangeable&quot;, </span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     maxit = 50, m = 2, pMat = pMat)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $inference</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Estimates           SE    z value   Pr(&gt;|z|)</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 672.80209372 2.333119e+02  2.8837023 0.00393030</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2   0.42917075 4.349044e-01  0.9868163 0.32373272</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3   0.35191319 6.701037e-01  0.5251623 0.59947035</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4   0.05025117 9.886384e-03  5.0828660 0.00000037</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  -0.02466605 1.271584e-02 -1.9397898 0.05240524</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6   0.04980042 2.804215e-01  0.1775913 0.85904394</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7  -1.28003491 5.009943e-01 -2.5549889 0.01061912</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $phi</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 319700</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $Ralpha</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]       [,2]       [,3]       [,4]</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]  1.0000000 -0.1103776 -0.1103776 -0.1103776</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -0.1103776  1.0000000 -0.1103776 -0.1103776</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -0.1103776 -0.1103776  1.0000000 -0.1103776</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,] -0.1103776 -0.1103776 -0.1103776  1.0000000</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;class&quot;)</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;summary_meanscore&quot;</span></span></code></pre></div>
+<p>The summary_meanscore() and summary_ipw() summarises the results from
+fitted object obtained from meanscore and ipw functions. It provides the
+list of parameter estimates, wald statistics, p-value, phi value.</p>
+</div>
+<div id="sipw-aipw-misipw-miaipw" class="section level1">
+<h1>SIPW, AIPW, miSIPW, miAIPW</h1>
+<p>The inverse probability weighted method can be used through the
+function . Similarly we need to specify a predictor matrix for the
+imputation of score fucntion missing due to incomplete data. The
+argument takes the predictor matrix to be used in inside the function.
+The demo code for this model as follows :</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>m2<span class="ot">&lt;-</span><span class="fu">SIPW</span>(<span class="at">data=</span>srdata1,formula<span class="ot">&lt;-</span>formula,<span class="at">id=</span><span class="st">&#39;ID&#39;</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">visit=</span><span class="st">&#39;Visit&#39;</span>,<span class="at">family=</span><span class="st">&#39;gaussian&#39;</span>,<span class="at">corstr =</span> <span class="st">&#39;exchangeable&#39;</span>,<span class="at">maxit=</span><span class="dv">5</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>m3<span class="ot">&lt;-</span><span class="fu">AIPW</span>(<span class="at">data=</span>srdata1,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>formula<span class="ot">&lt;-</span>formula,<span class="at">id=</span><span class="st">&#39;ID&#39;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">visit=</span><span class="st">&#39;Visit&#39;</span>,<span class="at">family=</span><span class="st">&#39;gaussian&#39;</span>,<span class="at">init.beta =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">init.alpha=</span><span class="cn">NULL</span>,<span class="at">init.phi=</span><span class="dv">1</span>,<span class="at">tol=</span>.<span class="dv">00001</span>,<span class="at">weights =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">corstr =</span> <span class="st">&#39;exchangeable&#39;</span>,<span class="at">maxit=</span><span class="dv">50</span>,<span class="at">m=</span><span class="dv">3</span>,<span class="at">pMat=</span>pMat)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>m4<span class="ot">&lt;-</span><span class="fu">miSIPW</span>(<span class="at">data=</span>srdata1,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>formula<span class="ot">&lt;-</span>formula,<span class="at">id=</span><span class="st">&#39;ID&#39;</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">visit=</span><span class="st">&#39;Visit&#39;</span>,<span class="at">family=</span><span class="st">&#39;gaussian&#39;</span>,<span class="at">init.beta =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">init.alpha=</span><span class="cn">NULL</span>,<span class="at">init.phi=</span><span class="dv">1</span>,<span class="at">tol=</span><span class="fl">0.001</span>,<span class="at">weights =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="at">corstr =</span> <span class="st">&#39;exchangeable&#39;</span>,<span class="at">maxit=</span><span class="dv">50</span>,<span class="at">m=</span><span class="dv">2</span>,<span class="at">pMat=</span>pMat)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>m1<span class="ot">&lt;-</span><span class="fu">miAIPW</span>(<span class="at">data=</span>srdata1,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>formula<span class="ot">&lt;-</span>formula,<span class="at">id=</span><span class="st">&#39;ID&#39;</span>,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a> <span class="at">visit=</span><span class="st">&#39;Visit&#39;</span>,<span class="at">family=</span><span class="st">&#39;gaussian&#39;</span>,<span class="at">init.beta =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="at">init.alpha=</span><span class="cn">NULL</span>,<span class="at">init.phi=</span><span class="dv">1</span>,<span class="at">tol=</span>.<span class="dv">00001</span>,<span class="at">weights =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="at">corstr =</span> <span class="st">&#39;exchangeable&#39;</span>,<span class="at">maxit=</span><span class="dv">4</span>,<span class="at">m=</span><span class="dv">2</span>,<span class="at">pMat=</span>pMat)</span></code></pre></div>
+</div>
+<div id="model-selection-crietrion-qic" class="section level1">
+<h1>Model Selection Crietrion QIC</h1>
+<p>The function provides the list of various model selection criterion
+based on quasi liklihood. The demo code is as follows</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>m1<span class="ot">&lt;-</span><span class="fu">MeanScore</span>(<span class="at">data=</span>srdata1,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>             formula<span class="ot">&lt;-</span>formula,<span class="at">id=</span><span class="st">&#39;ID&#39;</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">visit=</span><span class="st">&#39;Visit&#39;</span>,<span class="at">family=</span><span class="st">&#39;gaussian&#39;</span>,<span class="at">init.beta =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">init.alpha=</span><span class="cn">NULL</span>,<span class="at">init.phi=</span><span class="dv">1</span>,<span class="at">tol=</span>.<span class="dv">00001</span>,<span class="at">weights =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">corstr =</span> <span class="st">&#39;exchangeable&#39;</span>,<span class="at">maxit=</span><span class="dv">50</span>,<span class="at">m=</span><span class="dv">2</span>,<span class="at">pMat=</span>pMat)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a> m11<span class="ot">&lt;-</span><span class="fu">MeanScore</span>(<span class="at">data=</span>srdata1,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>             formula<span class="ot">&lt;-</span>formula,<span class="at">id=</span><span class="st">&#39;ID&#39;</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">visit=</span><span class="st">&#39;Visit&#39;</span>,<span class="at">family=</span><span class="st">&#39;gaussian&#39;</span>,<span class="at">init.beta =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">init.alpha=</span><span class="cn">NULL</span>,<span class="at">init.phi=</span><span class="dv">1</span>,<span class="at">tol=</span>.<span class="dv">00001</span>,<span class="at">weights =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">corstr =</span> <span class="st">&#39;independent&#39;</span>,<span class="at">maxit=</span><span class="dv">50</span>,<span class="at">m=</span><span class="dv">2</span>,<span class="at">pMat=</span>pMat)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">QICmiipw</span>(<span class="at">model.R=</span>m1,<span class="at">model.indep=</span>m11,<span class="at">family=</span><span class="st">&quot;gaussian&quot;</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       QIC      QICu Quasi Lik </span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  171.7651  485.0000  -78.5000</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

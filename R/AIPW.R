@@ -1,15 +1,19 @@
-#' SIPW
-#' @title Fit a geeglm model using SIPW
-#' @description provides simple inverse probability weighted estimates of parameters for GEE model
+#' AIPW
+#' @title
+#' Fit a geeglm model using AIPW
+#' @description provides augmented inverse probability weighted estimates of parameters for GEE model
 #' of response variable using different covariance structure
-#' @details It uses the simple inverse probability weighted method to reduce the bias
-#' due to missing values in GEE model for longitudinal data.The response variable \eqn{\mathbf{Y}} is related to the coariates as \eqn{g(\mu)=\mathbf{X}\beta}, where \code{g} is the link function for the glm. The estimating equation is
-#' \deqn{\sum_{i=1}^{k}\sum_{j=1}^{n}\frac{\delta_{ij}}{\pi_{ij}}S(Y_{ij},\mathbf{X}_{ij},\mathbf{X}'_{ij})}=0
-#' where \eqn{\delta_{ij}=1} if there is missing no value in covariates and 0 otherwise.
-#' \eqn{\mathbf{X}} is fully observed all subjects and \eqn{\mathbf{X}'} is partially missing.
+#' @details It uses the inverse probability weighted method to reduce the bias
+#' due to missing values in GEE model for longitudinal data. The response variable \eqn{\mathbf{Y}} is related to the coariates as \eqn{g(\mu)=\mathbf{X}\beta}, where \code{g} is the link function for the glm. The estimating equation is
+#' \deqn{\sum_{i=1}^{k}\sum_{j=1}^{n}(\frac{\delta_{ij}}{\pi_{ij}}S(Y_{ij},\mathbf{X}_{ij},\mathbf{X}'_{ij})+(1-\frac{\delta_{ij}}{\pi_{ij}})\phi(\mathbf{V}=\mathbf{v}))=0}
+#' where \eqn{\delta_{ij}=1} if there is missing value in covariates and 0 otherwise,
+#' \eqn{\mathbf{X}} is fully observed all subjects and \eqn{\mathbf{X}'} is partially missing,
+#'  where \eqn{\mathbf{V}=(Y,\mathbf{X})}. The missing score function values due to incomplete data are estimated
+#'  using an imputation model through mice which we have considered as \eqn{\phi(\mathbf{V}=\mathbf{v}))}.
+#'
 #' @param data longitudinal data set where each subject's outcome has been measured at same time points and number
 #'  of visits for each patient is similar.
-#' Covariance structure of the outcome variable like "unstructured","independent"
+#' Covariance structure of the outcome variable like "unstructured","independent","AR-1"
 #' ,"exchangeable"
 #' @param formula formula for the response model
 #' @param id column name of id of subjects in the dataset
@@ -17,14 +21,15 @@
 #' @param family name of the distribution for the response variable, For more information on how to use \code{family} objects, see \code{\link{family}}
 #' @param init.beta initial values for the regression coefficient of GEE model
 #' @param init.alpha initial values for the correlation structure
-#' @param init.phi initial values for the scale parameter
+#' @param init.phi initial values for the csale parameter for
 #' @param tol tolerance in calculation of coefficients
 #' @param weights A vector of weights for each observation.
 #' If an observation has weight 0, it is excluded from the calculations of any parameters. Observations with a NA anywhere (even in variables not included in the model) will be assigned a weight of 0. Weights are updated as the mentioned the details.
 #' @param corstr a character string specifying the correlation structure. It could "independence", "exchangeable", "AR-1", "unstructured"
-#' @param maxit maximum number of iteration
-#' @param maxvisit maximum number of visit
-#'
+#' @param maxit maximum number iteration for newton-raphson
+#' @param m number of imputation used to update the missing score function value due incomplete data.
+#' @param pMat predictor matrix as obtained in \code{\link{mice}}
+#' @param method method option for mice model,for information see \link{mice}
 #' @return A list of objects containing the following objects
 #' \describe{
 #'   \item{call}{details about arguments passed in the function}
@@ -38,8 +43,8 @@
 #'   \item{betaSand}{sandwich estimator value for the variance covariance matrix of the beta}
 #' }
 #' @import mice
-#' @import MASS
 #' @import Matrix
+#' @import MASS
 #' @export
 #' @references Wang, C. Y., Shen-Ming Lee, and Edward C. Chao. "Numerical equivalence of imputing scores and weighted estimators in regression analysis with missing covariates." Biostatistics 8.2 (2007): 468-473.
 #' @references Seaman, Shaun R., and Stijn Vansteelandt. "Introduction to double robust methods for incomplete data." Statistical science: a review journal of the Institute of Mathematical Statistics 33.2 (2018): 184.
@@ -48,14 +53,19 @@
 #'  \dontrun{
 #' ##
 #' formula<-C6kine~ActivinRIB+ActivinRIIA+ActivinRIIAB+Adiponectin+AgRP+ALCAM
-#' m1<-SIPW(data=srdata1,formula<-formula,id='ID',
-#' visit='Visit',family='gaussian',corstr = 'exchangeable',maxit=5)
+#' pMat<-mice::make.predictorMatrix(srdata1[names(srdata1)%in%all.vars(formula)])
+#' m1<-AIPW(data=srdata1,
+#' formula<-formula,id='ID',
+#' visit='Visit',family='gaussian',init.beta = NULL,
+#' init.alpha=NULL,init.phi=1,tol=.00001,weights = NULL,
+#' corstr = 'exchangeable',maxit=50,m=3,pMat=pMat)
 #' ##
 #' }
 #' @author Atanu Bhattacharjee, Bhrigu Kumar Rajbongshi and Gajendra Kumar Vishwakarma
-#' @seealso   \link{AIPW},\link{miSIPW},\link{miAIPW}
-SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
-               init.phi=NULL,tol=0.001,weights=NULL,corstr='independent',maxit=10,maxvisit=NULL){
+#' @seealso   \link{SIPW},\link{miSIPW},\link{miAIPW}
+#'
+AIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
+               init.phi=NULL,tol=0.001,weights=NULL,corstr='independent',maxit=50,m=2,pMat,method=NULL){
   call<-match.call()
   if(is.null(data)){
     stop("data can't be NULL")
@@ -76,28 +86,25 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
   modeldata<-model.frame(formula,dt)
   names(dt)[which(names(dt)==id)]<-'id'
   names(dt)[which(names(dt)==visit)]<-'visit'
-
-  dtid<-data.frame(table(dt$id))
-  #dtid<-dtid[2]
+  dtid<-data.frame(table(dt$id))[2]
   dtidvisit<-table(dt$id,dt$visit)
   #if(max(dtid)>maxvisit){
-   # stop("Some id's having visits more than",maxvisit)
-  #}
-
+  #  stop("Some id's having visits more than",maxvisit)
+ # }
   uniqueVisit<-unique(dt$visit)
   for(i in 1:length(uniqueVisit)){
     dt[dt$visit==uniqueVisit[i],]$visit<-i
   }
   init.beta<-init.beta;init.alpha<-init.alpha;init.phi<-init.phi
-
+  #maxvisit<-maxvisit
   # function to create IPW
 
   #mdata<-data.frame(id=c(rep(1,4),rep(2,4),rep(3,4)),visit=rep(1:4,3),y=rnorm(12,0,1),x1=rnorm(12,2,1),x3=c(1,1,1,1,1,NA,NA,NA,NA,NA,1,1))
   #data<-mdata;id<-'id';visit<-'visit';formula<-y~x1+x3
-  # data<-dt;id<-id;visit<-visit;formula<-C6kine~ActivinRIB+ActivinRIIA+ActivinRIIAB+Adiponectin+AgRP+ALCAM
-
+  #data<-dt;id<-'id';visit<-'visit';formula<-C6kine~ActivinRIB+ActivinRIIA+ActivinRIIAB+Adiponectin+AgRP+ALCAM
+  #pMat<-make.predictorMatrix(data[names(data)%in%all.vars(formula)]);m=1;method=NULL
   if(anyNA(dt)==T){
-  ipwlong<-function(data,id,visit,formula)
+  aipwlong<-function(data,id,visit,formula)
   {
     dt<-data
     mterms<-all.vars(formula)
@@ -119,15 +126,36 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
       xmodel<-mterms
       fxmodel<-xptrn[names(xptrn)%in%mterms]
       fxmodel<-fxmodel[fxmodel==F]
+      dt2new<-dt2[names(dt2)%in%mterms]
+      micemodel<-mice::mice(
+        data=dt2new,
+        m=m,
+        method=method,
+        predictorMatrix=pMat,
+        ignore=NULL,printFlag = F
+
+      )
+      completeList<-complete(micemodel,1)
+      #names(dt2)[names(dt2)%in%names(fxmodel)]<-names(completeList)[names(dt2)%in%names(fxmodel)]
+      dt2[names(dt2)%in%mterms]<-completeList
       modeldt2<-formula(paste0('r.ptrn~',paste(names(fxmodel),collapse = '+')))
       m1<-glm(modeldt2,data=dt2,family='binomial')
-      mprob1[[i]]<-data.frame(dt2,w=1/m1$fitted.values)
+      dt2<-data.frame(dt2,w=m1$fitted.values)
+      for(j in 1:length(dt2$id)){
+        if(dt2$r.ptrn[j]==1){
+          dt2$w[j]<-1/dt2$w[j]
+        }else{
+          dt2$w[j]<-1/(1-dt2$w[j])
+        }
+      }
+      #dt2$w<-sapply(dt2$r.ptrn,dt2$w,1-dt$w)
+      mprob1[[i]]<-dt2
     }
     reddt<-Reduce('rbind',mprob1)
     reddt<-reddt[order(reddt$id),]
     reddt
   }
-  wlong<-ipwlong(data=dt,id=id,visit=visit,formula=formula)
+  wlong<-aipwlong(data=dt,id=id,visit=visit,formula=formula)
   #weights<-rep(1,nrow(data))
   wlong$w<-ifelse(apply(wlong,1,anyNA),0,wlong$w)
   if(sum(wlong$r.ptrn)!=nrow(wlong)){
@@ -135,19 +163,21 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
   }else{
     weights<-rep(1,nrow(data))
   }
-
   dt<-na.omit(wlong)
   weights<-dt$w
   }else{
     dt<-dt
     weights<-rep(1,nrow(data))
-  }
+}
+
 
   dat <- model.frame(formula=formula, data=dt, na.action=na.exclude)
   len<-data.frame(table(dt$id))
   nn <- dim(dat)[1]
-  corlist<-c("independence", "ar1", "exchangeable", "m-dependent", "unstructured", "fixed", "userdefined")
+  corlist<-c("independence", "ar1", "exchangeable", "unstructured", "fixed", "userdefined")
   cor.match <- charmatch(corstr, corlist)
+
+
 
   fmly<-get(family, mode = "function", envir = parent.frame(2))
   fmly<-fmly()
@@ -155,6 +185,8 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
   InvLink <- fmly$linkinv
   VarFun <- fmly$variance
   InvLinkDeriv <- fmly$mu.eta
+  #dt<-na.omit(wlong)
+  #weights<-dt$w
 
   modterms <- terms(formula)
   X <- model.matrix(formula,dat)
@@ -167,8 +199,9 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
   dInvLinkdEta <- Diagonal(nn)
   Resid <- Diagonal(nn)
 
+
   if(is.null(init.phi)){
-  init.phi<-1
+    init.phi<-1
   }else{
     init.phi<-init.phi
   }
@@ -176,8 +209,8 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
 
   linkOfMean <- LinkFun(mean(Y))
   if(is.null(init.beta)){
-  init.beta <- rep(0, dim(X)[2])
-  init.beta[1] <- linkOfMean
+    init.beta <- rep(0, dim(X)[2])
+    init.beta[1] <- linkOfMean
   }else{
     init.beta<-init.beta
   }
@@ -188,7 +221,6 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
   }else{
     init.alpha<-init.alpha
   }
-
   #beta<-init.beta
 
   #len <- as.numeric(summary(split(Y, id, drop=T))[,1])
@@ -198,7 +230,7 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
   count <- 0
   unstable <- F
   phiold <- phi
-  betaold <- beta
+  kbeta <- beta
   alpha<-init.alpha
   R.alpha.inv <-  Diagonal(x = rep.int(1/phi, nn))
   betalist<-list()
@@ -214,14 +246,15 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
 
     #R.alpha.inv <-  Diagonal(x = rep.int(1/phi, nn))
     #R.alpha.inv<-as.matrix(R.alpha.inv)
+    #y=Y;x=X;vfun=StdErr;mu=mu;w=W
     UpdatePhi<-function(y,x,vfun,mu,w){
       ymu<-(as.matrix(y-mu,ncol=1,nrow=length(y),byrow=T))
       res<-vfun%*%(w%*%(ymu))
       Newphi<-sum(res*res)/(length(y)-ncol(x))
       Newphi
     }
-    phi<-UpdatePhi(y=Y,x=X,vfun=StdErr,mu=mu,w=W)
-    phi.new<-phi
+    phi.new<-UpdatePhi(y=Y,x=X,vfun=StdErr,mu=mu,w=W)
+    phi<-phi.new
 
     #y=Y;x=X;vfun=StdErr;mu=mu;w=W;phi=1;corstr = corstr;ni=len$Freq;mv=NULL;id=id$Pig;visit=visit$Time
     #y=Y;x=X;vfun=StdErr;mu=mu;w=W;phi=phi;corstr = corstr;ni=len$Freq;mv=NULL;id=dt$id;visit=dt$visit
@@ -309,15 +342,15 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
       rslt
     }
     Beta<-updateBeta(y=Y,x=X,vfun=StdErr,mu=mu,w=W,D=dInvLinkdEta,Ralpha=R.alpha.inv,beta=beta)
-    beta<-Beta$Newbeta
-
+    betaNew<-Beta$Newbeta
+    phi <- phi.new
     R.alpha.inv<-as.matrix(R.alpha.inv)
     phiold <- phi
-
-    if( max(abs((beta - betaold)/(beta+.Machine$double.eps ))) < tol ){converged <- T; stop <- T}
+    beta<-betaNew
+    if( max(abs((beta - kbeta)/(beta+.Machine$double.eps ))) < tol ){converged <- T; stop <- T}
     if(p >= maxit){stop <- T}
 
-    betalist[[p]]<-beta
+    betalist[[p]]<-betaNew
     betaold<-beta
   }
   eta <- as.vector(X %*% beta)
@@ -372,4 +405,8 @@ SIPW<-function(data,formula,id,visit,family,init.beta=NULL,init.alpha=NULL,
 utils::globalVariables(c("Ralpha.fixed","ginv","triu","model.frame", "model.matrix",
                          "model.response", "na.exclude", "na.omit", "na.pass",
                          "pnorm", "terms","stats","glm"))
+
+
+
+
 
